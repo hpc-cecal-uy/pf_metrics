@@ -1,0 +1,26 @@
+##############################################################
+##############################################################
+INSTRUCTIONS
+
+Script to plot the global Pareto front and calculate generational distance, spread, spacing and relative hypervolume based on the pareto fronts output from ECJ (http://cs.gmu.edu/~eclab/projects/ecj/).
+
+USAGE:
+python pf_metrics.py <path_to_results> <number_of_runs> <objective_1_name> <objective_2_name>
+
+	e.g.: python pf_metrics.py /home/john_doe/results/ 30 Price Coverage
+
+Notes:
+	-<path_to_results> is the folder where the files "job.*.front.stat" are located
+	-<number_of_runs> is the amount of jobs executed. e.g.: if number_of_runs is 4 you should have job.0.front.stat, ..., job.3.front.stat
+	-<objective_J_name> is the label for the axis corresponding to objevive J in the plot
+
+IMPORTANT: THIS SCRIPT ASSUMES MINIMIZATION OF BOTH OBJECTIVES. YOU SHOULD MODIFY THESE BEHAVIOUR TO FIT YOUR NEEDS.
+
+The metrics are calculated using the formulas in  "Multiobjective optimization using Evolutionary Algorithms" from Kalyanmoy Deb.
+For the spread calculation, the euclidean distance is used.
+Hypervolumes are calculated using the code of Simon Wessing from TU Dortmund University found at https://ls11-www.cs.uni-dortmund.de/rudolph/hypervolume/start
+
+Please feel free to contact me at: renzom@fing.edu.uy
+
+##############################################################
+##############################################################
