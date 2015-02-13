@@ -23,7 +23,8 @@
 # USAGE:
 # python pf_metrics.py <path_to_results> <number_of_runs> <objective_1_name> <objective_2_name>
 
-# 	e.g.: python pf_metrics.py /home/john_doe/results/ 30 Price Coverage
+# 	To run the example: 
+		# python pf_metrics.py example/ 10 Price Coverage
 
 # Notes:
 # 	-<path_to_results> is the folder where the files "job.*.front.stat" are located
