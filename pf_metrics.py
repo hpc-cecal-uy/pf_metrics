@@ -200,7 +200,7 @@ if __name__ == "__main__":
 	ylabel (objectives[1])
 	title ("Global PF")
 	legend(loc=0,ncol=3 ,prop={'size':10},scatterpoints = 1)
-	savefig("GlobalPF.png")
+	savefig("%s/GlobalPF.png"%path_to_results)
 
 	#Now let's calculate some metrics
 
