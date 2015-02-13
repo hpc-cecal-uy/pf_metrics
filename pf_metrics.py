@@ -28,7 +28,7 @@
 # Notes:
 # 	-<path_to_results> is the folder where the files "job.*.front.stat" are located
 # 	-<number_of_runs> is the amount of jobs executed. e.g.: if number_of_runs is 4 you should have job.0.front.stat, ..., job.3.front.stat
-# 	-<objective_J_name> is the label for the axis corresponding to objevive J in the plot
+# 	-<objective_J_name> is the label for the axis corresponding to objective J in the plot
 
 # IMPORTANT: THIS SCRIPT ASSUMES MINIMIZATION OF BOTH OBJECTIVES. YOU SHOULD MODIFY THESE BEHAVIOUR TO FIT YOUR NEEDS.
 
