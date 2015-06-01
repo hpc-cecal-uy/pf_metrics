@@ -234,7 +234,7 @@ if __name__ == "__main__":
 			front.append([global_pf[0][k],global_pf[1][k]])
 
 	hv_ideal_pf= hyperVolume.compute(front)
-	hv_quotients_list=[x/hv_ideal_pf for x in hv_list]
+	hv_quotients_list=[x/float(hv_ideal_pf) for x in hv_list]
 
 
 	# Print the results
