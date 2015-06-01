@@ -116,7 +116,7 @@ def spacing (X,Y):
 	number_of_points=len(X)
 	list_of_distances=[]
 	for i in range(0,len(X)):
-		list_of_distances.append(distance_to_closest_neighbor_spacing(X[i],Y[i], [a for a in X if a!=X[i]], [b for b in Y if b!=Y[i]]))
+		list_of_distances.append(distance_to_closest_neighbor_spacing(X[i],Y[i], [a for a in X[:i]+X[i+1:]], [b for b in Y[:i]+Y[i+1:]]))
 	average_distance=np.mean(np.array(list_of_distances))
 	sum=0
 	for d in list_of_distances:
@@ -130,7 +130,7 @@ def spread(X,Y,PF):
 	number_of_points=len(X)
 	list_of_distances=[]
 	for i in range(0,len(X)):
-		list_of_distances.append(distance_to_closest_neighbor_spread(X[i],Y[i], [a for a in X if a!=X[i]], [b for b in Y if b!=Y[i]]))
+		list_of_distances.append(distance_to_closest_neighbor_spread(X[i],Y[i], [a for a in X[:i]+X[i+1:]], [b for b in Y[:i]+Y[i+1:]]))
 	average_distance=np.mean(np.array(list_of_distances))
 	sum=0
 	for d in list_of_distances:
