@@ -57,7 +57,7 @@ from hv import HyperVolume
 ####################################
 ########## MAIN ####################
 
-def load_ecj_results(path_to_results, number_of_runs):
+def load_jmetal_results(path_to_results, number_of_runs):
     #Initialize dictionary to parse the pareto fronts
     results= {}
     for run in range (0,number_of_runs):
@@ -89,7 +89,7 @@ if __name__ == "__main__":
         objectives=[sys.argv[3],sys.argv[4]]
     
     #Load the pareto fronts from the files
-    results = load_ecj_results(path_to_results, number_of_runs)
+    results = load_jmetal_results(path_to_results, number_of_runs)
 
     #Let's find the global pareto front combining all runs
     x=[]
