@@ -64,6 +64,15 @@ def pareto_frontier(Xs, Ys, maxX = False, maxY = False):
 	
 	p_frontX = [pair[0] for pair in p_front]
 	p_frontY = [pair[1] for pair in p_front]
+
+	#Borro los elementos repetidos del frente
+	copia_pfX=list(p_frontX)
+	copia_pfY=list(p_frontY)
+	for i,(a,b) in enumerate(zip(copia_pfX[1:],copia_pfY[1:])):
+		if (a==copia_pfX[i] and b==copia_pfY[i]):
+			p_frontX.remove(a)
+			p_frontY.remove(b)
+
 	return p_frontX, p_frontY
 
 
@@ -89,16 +98,6 @@ def generational_distance(X,Y,PF):
 	for i in range(0,number_of_points):
 		total_distance+=distance_to_front(X[i],Y[i],PF)
 	return sqrt(total_distance)/float(number_of_points)
-
-def distance_to_closest_neighbor_spread(x,y,X,Y):
-	if (len(X)!=len(Y)):
-		raise Exception("ERROR: X and Y must have the same length")
-	min_distance=euclidean_distance(x,y,X[0],Y[0])
-	for i in range(1,len(X)):
-		distance=euclidean_distance(x,y,X[i],Y[i])
-		if (distance<min_distance):
-			min_distance=distance
-	return min_distance
 
 def distance_to_closest_neighbor_spacing(x,y,X,Y):
 	if (len(X)!=len(Y)):
@@ -129,17 +128,16 @@ def spread(X,Y,PF):
 		raise Exception("ERROR: X and Y must have the same length")
 	number_of_points=len(X)
 	list_of_distances=[]
-	for i in range(0,len(X)):
-		list_of_distances.append(distance_to_closest_neighbor_spread(X[i],Y[i], [a for a in X[:i]+X[i+1:]], [b for b in Y[:i]+Y[i+1:]]))
+	for i in range(1,len(X)-1):
+		list_of_distances.append(euclidean_distance(X[i],Y[i],X[i+1],Y[i+1]))
 	average_distance=np.mean(np.array(list_of_distances))
-	sum=0
+	suma=0
 	for d in list_of_distances:
-		sum+=abs(d-average_distance)
+		suma+=abs(d-average_distance)
 
 	argmin_objective_0=np.argmin(np.array(PF[0]))
 	argmin_objective_1=np.argmin(np.array(PF[1]))
-	distance_to_pf_extreme_0=distance_to_closest_neighbor_spread(PF[0][argmin_objective_0], PF[1][argmin_objective_0], X,Y)
-	distance_to_pf_extreme_1=distance_to_closest_neighbor_spread(PF[0][argmin_objective_1], PF[1][argmin_objective_1], X,Y)
-
-	spread = (distance_to_pf_extreme_0 + distance_to_pf_extreme_1 + sum)/float(distance_to_pf_extreme_0+distance_to_pf_extreme_1+(number_of_points*average_distance))
+	distance_to_pf_extreme_0=euclidean_distance(PF[0][argmin_objective_0], PF[1][argmin_objective_0], X[0],Y[0])
+	distance_to_pf_extreme_1=euclidean_distance(PF[0][argmin_objective_1], PF[1][argmin_objective_1], X[len(X)-1],Y[len(X)-1])
+	spread = (distance_to_pf_extreme_0 + distance_to_pf_extreme_1 + suma)/float(distance_to_pf_extreme_0+distance_to_pf_extreme_1+(number_of_points*average_distance))
 	return spread
