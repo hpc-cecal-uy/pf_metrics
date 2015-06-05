@@ -50,6 +50,7 @@ import numpy as np
 from pylab import *
 
 import metricslib
+import tabulatelib
 from hv import HyperVolume
 
 ####################################
@@ -128,9 +129,7 @@ if __name__ == "__main__":
         spr_list.append(metricslib.spread(results[run][objectives[0]],results[run][objectives[1]], global_pf))
         
         hyperVolume = metricslib.HyperVolume(referencePoint)
-        front=[]
-        for k in range(0, len(results[run][objectives[0]])):
-            front.append([results[run][objectives[0]][k],results[run][objectives[1]][k]])
+        front = [[results[run][objectives[0]][i], results[run][objectives[1]][i]] for i in range(len(results[run][objectives[0]]))]  
         hv_list.append(hyperVolume.compute(front))
 
 
@@ -182,8 +181,6 @@ if __name__ == "__main__":
     print "########################"
     print ""
     print "You can find the plot at: %s%s"%(path_to_results,"GlobalPF.png")
-
-
 
 
 
