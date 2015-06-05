@@ -51,10 +51,32 @@ from pylab import *
 
 import metricslib
 import tabulatelib
+import gnuplot
 from hv import HyperVolume
 
 ####################################
 ########## MAIN ####################
+
+def load_ecj_results(path_to_results, number_of_runs):
+    #Initialize dictionary to parse the pareto fronts
+    results= {}
+    for run in range (0,number_of_runs):
+        results[run]={}
+        for obj in objectives:
+            results[run][obj]=[]
+    
+    for run in range(0,number_of_runs):
+        path_to_file="%sFUN.%d" %(path_to_results,run)
+        f=open (path_to_file)
+        lines= f.readlines()
+        
+        for line in lines:
+            tokens=line.split()
+            results[run][objectives[0]].append(float(tokens[0]))
+            results[run][objectives[1]].append(float(tokens[1]))
+        f.close()
+
+    return results
 
 if __name__ == "__main__":
 
@@ -66,29 +88,8 @@ if __name__ == "__main__":
         number_of_runs=int(sys.argv[2])
         objectives=[sys.argv[3],sys.argv[4]]
     
-
-    #Initialize dictionary to parse the pareto fronts
-    results= {}
-    for run in range (0,number_of_runs):
-        results[run]={}
-        for obj in objectives:
-            results[run][obj]=[]
-
-
     #Load the pareto fronts from the files
-    for run in range(0,number_of_runs):
-        path_to_file="%sjob.%d.front.stat" %(path_to_results,run)
-        f=open (path_to_file)
-        lines= f.readlines()
-        for line in lines:
-            tokens=line.split()
-            results[run][objectives[0]].append(float(tokens[0]))
-            results[run][objectives[1]].append(float(tokens[1]))
-        f.close()
-
-    # Define colors for plots
-    cmap = plt.get_cmap('gnuplot')
-    colors = [cmap(p) for p in np.linspace(0, 1, int(number_of_runs))]
+    results = load_ecj_results(path_to_results, number_of_runs)
 
     #Let's find the global pareto front combining all runs
     x=[]
@@ -98,20 +99,12 @@ if __name__ == "__main__":
             x.append(item)
         for item in results[run][objectives[1]]:
             y.append(item)
-        scatter(results[run][objectives[0]],results[run][objectives[1]],label="Run #%d"%run, color=colors[run])
 
+    global_pf = metricslib.pareto_frontier(x,y)
 
-    global_pf=metricslib.pareto_frontier(x,y)
-    plot(global_pf[0],global_pf[1],color="black", linestyle=":", label="Global PF")
-    grid(True)
-    xlabel (objectives[0])
-    ylabel (objectives[1])
-    title ("Global PF")
-    legend(loc=0,ncol=3 ,prop={'size':10},scatterpoints = 1)
-    savefig("%s/GlobalPF.png"%path_to_results)
+    gnuplot.plot_allruns(objectives, global_pf, results, path_to_results)
 
     #Now let's calculate some metrics
-
     gd_list=[]
     spa_list=[]
     spr_list=[]
@@ -122,7 +115,6 @@ if __name__ == "__main__":
     max_objective_1 = max(np.array(global_pf[1]))
     referencePoint = [max_objective_0, max_objective_1]
 
-
     for run in range (0,number_of_runs):
         gd_list.append(metricslib.generational_distance(results[run][objectives[0]],results[run][objectives[1]],global_pf))
         spa_list.append(metricslib.spacing(results[run][objectives[0]],results[run][objectives[1]]))
@@ -132,16 +124,12 @@ if __name__ == "__main__":
         front = [[results[run][objectives[0]][i], results[run][objectives[1]][i]] for i in range(len(results[run][objectives[0]]))]  
         hv_list.append(hyperVolume.compute(front))
 
-
     #Compute the quotient between the PF of each run and the global PF
     hyperVolume = HyperVolume(referencePoint)
-    front=[]
-    for k in range(0, len(global_pf[0])):
-            front.append([global_pf[0][k],global_pf[1][k]])
-
-    hv_ideal_pf= hyperVolume.compute(front)
+    front = [[global_pf[0][i],global_pf[1][i]] for i in range(len(global_pf[0]))]
+    hv_ideal_pf = hyperVolume.compute(front)
+    
     hv_quotients_list=[x/float(hv_ideal_pf) for x in hv_list]
-
 
     # Print the results
     print ""

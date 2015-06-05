@@ -23,13 +23,13 @@
 # USAGE:
 # python pf_metrics.py <path_to_results> <number_of_runs> <objective_1_name> <objective_2_name>
 
-# 	To run the example: 
-		# python pf_metrics.py example/ 10 Price Coverage
+#   To run the example: 
+        # python pf_metrics.py example/ 10 Price Coverage
 
 # Notes:
-# 	-<path_to_results> is the folder where the files "job.*.front.stat" are located
-# 	-<number_of_runs> is the amount of jobs executed. e.g.: if number_of_runs is 4 you should have job.0.front.stat, ..., job.3.front.stat
-# 	-<objective_J_name> is the label for the axis corresponding to objective J in the plot
+#   -<path_to_results> is the folder where the files "job.*.front.stat" are located
+#   -<number_of_runs> is the amount of jobs executed. e.g.: if number_of_runs is 4 you should have job.0.front.stat, ..., job.3.front.stat
+#   -<objective_J_name> is the label for the axis corresponding to objective J in the plot
 
 # IMPORTANT: THIS SCRIPT ASSUMES MINIMIZATION OF BOTH OBJECTIVES. YOU SHOULD MODIFY THESE BEHAVIOUR TO FIT YOUR NEEDS.
 
@@ -43,240 +43,132 @@
 ##############################################################
 #AUXILIARY FUNCTIONS
 
+import sys
+sys.path.append('../libs')
+
 import numpy as np
 from pylab import *
+
+import metricslib
+import tabulatelib
+import gnuplot
 from hv import HyperVolume
-import sys
-
-
-def pareto_frontier(Xs, Ys, maxX = False, maxY = False):
-	# Sort the list in either ascending or descending order of X
-	myList = sorted([[Xs[i], Ys[i]] for i in range(len(Xs))], reverse=maxX)
-	# Start the Pareto frontier with the first value in the sorted list
-	p_front = [myList[0]]    
-	# Loop through the sorted list
-	for pair in myList[1:]:
-		if maxY:
-			if pair[1] >= p_front[-1][1]: 
-				p_front.append(pair) 
-		else:
-			if pair[1] <= p_front[-1][1]: 
-				p_front.append(pair) 
-	
-	p_frontX = [pair[0] for pair in p_front]
-	p_frontY = [pair[1] for pair in p_front]
-	return p_frontX, p_frontY
-
-
-def euclidean_distance(x1,y1,x2,y2):
-	return (sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2)))
-
-def distance_to_front(x,y,PF):
-	if (len(PF[0])!=len(PF[1])):
-		raise Exception("ERROR: Pareto front must have same X and Y dimensions")
-	min_distance= euclidean_distance(x,y,PF[0][0],PF[1][0])
-	for i in range(1,len(PF[0])):
-		dist=euclidean_distance(x,y,PF[0][i],PF[1][i])
-		if (dist<min_distance):
-			min_distance=dist
-	return min_distance
-
-
-def generational_distance(X,Y,PF):
-	if (len(X)!=len(Y)):
-		raise Exception("ERROR: X and Y must have the same length")
-	number_of_points=len(X)
-	total_distance=0
-	for i in range(0,number_of_points):
-		total_distance+=distance_to_front(X[i],Y[i],PF)
-	return sqrt(total_distance)/float(number_of_points)
-
-def distance_to_closest_neighbor_spread(x,y,X,Y):
-	if (len(X)!=len(Y)):
-		raise Exception("ERROR: X and Y must have the same length")
-	min_distance=euclidean_distance(x,y,X[0],Y[0])
-	for i in range(1,len(X)):
-		distance=euclidean_distance(x,y,X[i],Y[i])
-		if (distance<min_distance):
-			min_distance=distance
-	return min_distance
-
-def distance_to_closest_neighbor_spacing(x,y,X,Y):
-	if (len(X)!=len(Y)):
-		raise Exception("ERROR: X and Y must have the same length")
-	min_distance=abs(x-X[0])+abs(y-Y[0])
-	for i in range(1,len(X)):
-		distance=abs(x-X[i])+abs(y-Y[i])
-		if (distance<min_distance):
-			min_distance=distance
-	return min_distance
-
-def spacing (X,Y):
-	if (len(X)!=len(Y)):
-		raise Exception("ERROR: X and Y must have the same length")
-	number_of_points=len(X)
-	list_of_distances=[]
-	for i in range(0,len(X)):
-		list_of_distances.append(distance_to_closest_neighbor_spacing(X[i],Y[i], [a for a in X[:i]+X[i+1:]], [b for b in Y[:i]+Y[i+1:]]))
-	average_distance=np.mean(np.array(list_of_distances))
-	sum=0
-	for d in list_of_distances:
-		sum+=((d-average_distance)*(d-average_distance))
-	return sqrt(sum/float(number_of_points))
-
-
-def spread(X,Y,PF):
-	if (len(X)!=len(Y)):
-		raise Exception("ERROR: X and Y must have the same length")
-	number_of_points=len(X)
-	list_of_distances=[]
-	for i in range(0,len(X)):
-		list_of_distances.append(distance_to_closest_neighbor_spread(X[i],Y[i], [a for a in X[:i]+X[i+1:]], [b for b in Y[:i]+Y[i+1:]]))
-	average_distance=np.mean(np.array(list_of_distances))
-	sum=0
-	for d in list_of_distances:
-		sum+=abs(d-average_distance)
-
-	argmin_objective_0=np.argmin(np.array(PF[0]))
-	argmin_objective_1=np.argmin(np.array(PF[1]))
-	distance_to_pf_extreme_0=distance_to_closest_neighbor_spread(PF[0][argmin_objective_0], PF[1][argmin_objective_0], X,Y)
-	distance_to_pf_extreme_1=distance_to_closest_neighbor_spread(PF[0][argmin_objective_1], PF[1][argmin_objective_1], X,Y)
-
-	spread = (distance_to_pf_extreme_0 + distance_to_pf_extreme_1 + sum)/float(distance_to_pf_extreme_0+distance_to_pf_extreme_1+(number_of_points*average_distance))
-	return spread
-
-
 
 ####################################
 ########## MAIN ####################
 
+def load_ecj_results(path_to_results, number_of_runs):
+    #Initialize dictionary to parse the pareto fronts
+    results= {}
+    for run in range (0,number_of_runs):
+        results[run]={}
+        for obj in objectives:
+            results[run][obj]=[]
+    
+    for run in range(0,number_of_runs):
+        path_to_file="%sjob.%d.front.stat" %(path_to_results,run)
+        f=open (path_to_file)
+        lines= f.readlines()
+        
+        for line in lines:
+            tokens=line.split()
+            results[run][objectives[0]].append(float(tokens[0]))
+            results[run][objectives[1]].append(float(tokens[1]))
+        f.close()
+
+    return results
+
 if __name__ == "__main__":
 
-	if (len(sys.argv)<5):
-		raise Exception("Not enough parameters: <path_to_results> <number_of_runs> <obj1_name> <obj2_name>")
-	else:
-		path_to_results=sys.argv[1]
-		number_of_runs=int(sys.argv[2])
-		objectives=[sys.argv[3],sys.argv[4]]
-	
+    if (len(sys.argv)<5):
+        print "Not enough parameters. Usage: python {0} <path_to_results> <number_of_runs> <obj1_name> <obj2_name>".format(sys.argv[0])
+        exit(-1)
+    else:
+        path_to_results=sys.argv[1]
+        number_of_runs=int(sys.argv[2])
+        objectives=[sys.argv[3],sys.argv[4]]
+    
+    #Load the pareto fronts from the files
+    results = load_ecj_results(path_to_results, number_of_runs)
 
-	#Initialize dictionary to parse the pareto fronts
-	results= {}
-	for run in range (0,number_of_runs):
-		results[run]={}
-		for obj in objectives:
-			results[run][obj]=[]
+    #Let's find the global pareto front combining all runs
+    x=[]
+    y=[]
+    for run in range (0,number_of_runs):
+        for item in results[run][objectives[0]]:
+            x.append(item)
+        for item in results[run][objectives[1]]:
+            y.append(item)
 
+    global_pf = metricslib.pareto_frontier(x,y)
 
-	#Load the pareto fronts from the files
-	for run in range(0,number_of_runs):
-		path_to_file="%sjob.%d.front.stat" %(path_to_results,run)
-		f=open (path_to_file)
-		lines= f.readlines()
-		for line in lines:
-			tokens=line.split()
-			results[run][objectives[0]].append(float(tokens[0]))
-			results[run][objectives[1]].append(float(tokens[1]))
-		f.close()
+    gnuplot.plot_allruns(objectives, global_pf, results, path_to_results)
 
-	# Define colors for plots
-	cmap = plt.get_cmap('gnuplot')
-	colors = [cmap(p) for p in np.linspace(0, 1, int(number_of_runs))]
+    #Now let's calculate some metrics
+    gd_list=[]
+    spa_list=[]
+    spr_list=[]
+    hv_list=[]
 
-	#Let's find the global pareto front combining all runs
-	x=[]
-	y=[]
-	for run in range (0,number_of_runs):
-		for item in results[run][objectives[0]]:
-			x.append(item)
-		for item in results[run][objectives[1]]:
-			y.append(item)
-		scatter(results[run][objectives[0]],results[run][objectives[1]],label="Run #%d"%run, color=colors[run])
+    #The reference point to calculate the hypervolume is the projection of the global PF ends
+    max_objective_0 = max(np.array(global_pf[0]))
+    max_objective_1 = max(np.array(global_pf[1]))
+    referencePoint = [max_objective_0, max_objective_1]
 
+    for run in range (0,number_of_runs):
+        gd_list.append(metricslib.generational_distance(results[run][objectives[0]],results[run][objectives[1]],global_pf))
+        spa_list.append(metricslib.spacing(results[run][objectives[0]],results[run][objectives[1]]))
+        spr_list.append(metricslib.spread(results[run][objectives[0]],results[run][objectives[1]], global_pf))
+        
+        hyperVolume = metricslib.HyperVolume(referencePoint)
+        front = [[results[run][objectives[0]][i], results[run][objectives[1]][i]] for i in range(len(results[run][objectives[0]]))]  
+        hv_list.append(hyperVolume.compute(front))
 
-	global_pf=pareto_frontier(x,y)
-	plot(global_pf[0],global_pf[1],color="black", linestyle=":", label="Global PF")
-	grid(True)
-	xlabel (objectives[0])
-	ylabel (objectives[1])
-	title ("Global PF")
-	legend(loc=0,ncol=3 ,prop={'size':10},scatterpoints = 1)
-	savefig("%s/GlobalPF.png"%path_to_results)
+    #Compute the quotient between the PF of each run and the global PF
+    hyperVolume = HyperVolume(referencePoint)
+    front = [[global_pf[0][i],global_pf[1][i]] for i in range(len(global_pf[0]))]
+    hv_ideal_pf = hyperVolume.compute(front)
+    
+    hv_quotients_list=[x/float(hv_ideal_pf) for x in hv_list]
 
-	#Now let's calculate some metrics
+    # Print the results
+    print ""
+    print "########################"
+    print "Generational Distance"
+    print ""
+    print "Min (best): %f"%np.min(np.array(gd_list))
+    print "Mean: %f"%np.mean(np.array(gd_list))
+    print "Std: %f"%np.std(np.array(gd_list))
+    print "########################"
 
-	gd_list=[]
-	spa_list=[]
-	spr_list=[]
-	hv_list=[]
+    print ""
+    print "########################"
+    print "Spacing"
+    print ""
+    print "Min (best): %f" %np.min(np.array(spa_list))
+    print "Mean: %f" %np.mean(np.array(spa_list))
+    print "Std: %f"%np.std(np.array(spa_list))
+    print "########################"
+    print ""
 
-	#The reference point to calculate the hypervolume is the projection of the global PF ends
-	argmin_objective_0=np.argmin(np.array(global_pf[0]))
-	argmin_objective_1=np.argmin(np.array(global_pf[1]))
-	referencePoint = [global_pf[0][argmin_objective_1],global_pf[1][argmin_objective_0]]
+    print "########################"
+    print "Spread"
+    print ""
+    print "Min (best): %f" %np.min(np.array(spr_list))
+    print "Mean: %f" %np.mean(np.array(spr_list))
+    print "Std: %f"%np.std(np.array(spr_list))
+    print "########################"
 
-
-	for run in range (0,number_of_runs):
-		gd_list.append(generational_distance(results[run][objectives[0]],results[run][objectives[1]],global_pf))
-		spa_list.append(spacing(results[run][objectives[0]],results[run][objectives[1]]))
-		spr_list.append(spread(results[run][objectives[0]],results[run][objectives[1]], global_pf))
-		hyperVolume = HyperVolume(referencePoint)
-		front=[]
-		for k in range(0, len(results[run][objectives[0]])):
-			front.append([results[run][objectives[0]][k],results[run][objectives[1]][k]])
-		hv_list.append(hyperVolume.compute(front))
-
-
-	#Compute the quotient between the PF of each run and the global PF
-	hyperVolume = HyperVolume(referencePoint)
-	front=[]
-	for k in range(0, len(global_pf[0])):
-			front.append([global_pf[0][k],global_pf[1][k]])
-
-	hv_ideal_pf= hyperVolume.compute(front)
-	hv_quotients_list=[x/float(hv_ideal_pf) for x in hv_list]
-
-
-	# Print the results
-	print ""
-	print "########################"
-	print "Generational Distance"
-	print ""
-	print "Min (best): %f"%np.min(np.array(gd_list))
-	print "Mean: %f"%np.mean(np.array(gd_list))
-	print "Std: %f"%np.std(np.array(gd_list))
-	print "########################"
-
-	print ""
-	print "########################"
-	print "Spacing"
-	print ""
-	print "Min (best): %f" %np.min(np.array(spa_list))
-	print "Mean: %f" %np.mean(np.array(spa_list))
-	print "Std: %f"%np.std(np.array(spa_list))
-	print "########################"
-	print ""
-
-	print "########################"
-	print "Spread"
-	print ""
-	print "Min (best): %f" %np.min(np.array(spr_list))
-	print "Mean: %f" %np.mean(np.array(spr_list))
-	print "Std: %f"%np.std(np.array(spr_list))
-	print "########################"
-
-	print ""
-	print "########################"
-	print "Relative hypervolumes"
-	print ""
-	print "Max (best): %f"%np.max(np.array(hv_quotients_list))
-	print "Mean: %f"%np.mean(np.array(hv_quotients_list))
-	print "Std: %f"%np.std(np.array(hv_quotients_list))
-	print "########################"
-	print ""
-	print "You can find the plot at: %s%s"%(path_to_results,"GlobalPF.png")
-
-
+    print ""
+    print "########################"
+    print "Relative hypervolumes"
+    print ""
+    print "Max (best): %f"%np.max(np.array(hv_quotients_list))
+    print "Mean: %f"%np.mean(np.array(hv_quotients_list))
+    print "Std: %f"%np.std(np.array(hv_quotients_list))
+    print "########################"
+    print ""
+    print "You can find the plot at: %s%s"%(path_to_results,"GlobalPF.png")
 
 
 
