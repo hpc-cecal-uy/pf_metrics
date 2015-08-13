@@ -48,6 +48,7 @@ sys.path.append('../libs')
 
 import numpy as np
 from pylab import *
+from scipy import stats
 
 import metricslib
 import tabulatelib
@@ -136,10 +137,12 @@ if __name__ == "__main__":
     print "########################"
     print "Generational Distance"
     print ""
-    print "Min (best): %f"%np.min(np.array(gd_list))
-    print "Mean: %f"%np.mean(np.array(gd_list))
-    print "Std: %f"%np.std(np.array(gd_list))
-    print "########################"
+    print "Min (best): %f" % np.min(np.array(gd_list))
+    print "Mean: %f" % np.mean(np.array(gd_list))
+    print "Std: %f" % np.std(np.array(gd_list))
+    (w,p_value) = stats.shapiro(gd_list)
+    print "Shapiro-wilk test: p-value=%f w=%f" % (p_value,w)
+    print "########################" 
 
     print ""
     print "########################"
@@ -148,6 +151,8 @@ if __name__ == "__main__":
     print "Min (best): %f" %np.min(np.array(spa_list))
     print "Mean: %f" %np.mean(np.array(spa_list))
     print "Std: %f"%np.std(np.array(spa_list))
+    (w,p_value) = stats.shapiro(spa_list)
+    print "Shapiro-wilk test: p-value=%f w=%f" % (p_value,w)
     print "########################"
     print ""
 
@@ -157,6 +162,8 @@ if __name__ == "__main__":
     print "Min (best): %f" %np.min(np.array(spr_list))
     print "Mean: %f" %np.mean(np.array(spr_list))
     print "Std: %f"%np.std(np.array(spr_list))
+    (w,p_value) = stats.shapiro(spr_list)
+    print "Shapiro-wilk test: p-value=%f w=%f" % (p_value,w)
     print "########################"
 
     print ""
@@ -166,6 +173,8 @@ if __name__ == "__main__":
     print "Max (best): %f"%np.max(np.array(hv_quotients_list))
     print "Mean: %f"%np.mean(np.array(hv_quotients_list))
     print "Std: %f"%np.std(np.array(hv_quotients_list))
+    (w,p_value) = stats.shapiro(hv_quotients_list)
+    print "Shapiro-wilk test: p-value=%f w=%f" % (p_value,w)
     print "########################"
     print ""
     print "You can find the plot at: %s%s"%(path_to_results,"GlobalPF.png")
