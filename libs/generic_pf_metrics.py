@@ -25,6 +25,12 @@ import tabulatelib
 import gnuplot
 from hv import HyperVolume
 
+def gather_pf(results_paths):
+    global_pf = metricslib.pareto_frontier(results_paths[0],results_paths[1])
+
+    for i in range(len(global_pf[0])):
+        print("{0} {1}".format(global_pf[0][i],global_pf[1][i]))
+
 def compute(ref_pf_file, path_to_results, number_of_runs, objectives, results, normalize):
     if normalize == None or normalize == '0' or normalize == 'false' or normalize == 'no':
         normalize = False
@@ -35,21 +41,25 @@ def compute(ref_pf_file, path_to_results, number_of_runs, objectives, results, n
         exit(-1)
 
     raw_global_pf = None
+    x=[]
+    y=[]
     
-    if ref_pf_file == None or True:
+    if ref_pf_file == None:
         #Let's find the global pareto front combining all runs
-        x=[]
-        y=[]
         for run in range (0,number_of_runs):
             for item in results[run][objectives[0]]:
                 x.append(item)
             for item in results[run][objectives[1]]:
                 y.append(item)
-
-        raw_global_pf = metricslib.pareto_frontier(x,y)
     else:
         #Let's load the pareto front file
-        raw_global_pf = None
+        with open(ref_pf_file) as pf_file:
+            for line in pf_file:
+                tokens = line.strip().split()
+                x.append(float(tokens[0]))
+                y.append(float(tokens[1]))
+
+    raw_global_pf = metricslib.pareto_frontier(x,y)
 
     gnuplot.plot_allruns(objectives, raw_global_pf, results, path_to_results)
 

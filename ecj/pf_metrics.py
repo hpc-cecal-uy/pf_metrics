@@ -46,7 +46,6 @@ import sys
 sys.path.append('../libs')
 
 import generic_pf_metrics
-import metricslib
 
 ####################################
 ########## MAIN ####################

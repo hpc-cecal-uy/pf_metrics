@@ -46,7 +46,6 @@ import sys
 sys.path.append('../libs')
 
 import generic_pf_metrics
-import metricslib
 
 ####################################
 ########## MAIN ####################
@@ -61,7 +60,7 @@ def load_jmetal_results(path_to_results, number_of_runs):
     
     for run in range(0,number_of_runs):
         path_to_file = "{0}FUN.{1}".format(path_to_results,run)
-        f = open (path_to_file)
+        f = open(path_to_file)
         lines = f.readlines()
         
         for line in lines:
