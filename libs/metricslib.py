@@ -14,40 +14,44 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
-##############################################################
-##############################################################
-#INSTRUCTIONS
-
-# Script to plot the global Pareto front and calculate generational distance, spread, spacing and relative hypervolume based on the pareto fronts output from ECJ (http://cs.gmu.edu/~eclab/projects/ecj/).
-# USAGE:
-# python pf_metrics.py <path_to_results> <number_of_runs> <objective_1_name> <objective_2_name>
-
-#   To run the example:
-        # python pf_metrics.py example/ 10 Price Coverage
-
-# Notes:
-#   -<path_to_results> is the folder where the files "job.*.front.stat" are located
-#   -<number_of_runs> is the amount of jobs executed. e.g.: if number_of_runs is 4 you should have job.0.front.stat, ..., job.3.front.stat
-#   -<objective_J_name> is the label for the axis corresponding to objective J in the plot
-
-# IMPORTANT: THIS SCRIPT ASSUMES MINIMIZATION OF BOTH OBJECTIVES. YOU SHOULD MODIFY THESE BEHAVIOUR TO FIT YOUR NEEDS.
-
-# The metrics are calculated using the formulas in  "Multiobjective optimization using Evolutionary Algorithms" from Kalyanmoy Deb.
-# For the spread calculation, the euclidean distance is used.
-# Hypervolumes are calculated using the code of Simon Wessing from TU Dortmund University found at https://ls11-www.cs.uni-dortmund.de/rudolph/hypervolume/start
-
-# Please feel free to contact me at: renzom@fing.edu.uy
-
-##############################################################
-##############################################################
-#AUXILIARY FUNCTIONS
-
-import numpy as np
-from hv import HyperVolume
 import sys
 from math import sqrt
 
+import numpy as np
+from hv import HyperVolume
+
+def normalize_front(refFront, approxFront):
+    minX = refFront[0][0]
+    maxX = refFront[0][0]
+    minY = refFront[1][0]
+    maxY = refFront[1][0]
+    
+    for i in range(len(refFront[0])):
+        #print("{0} {1}".format(refFront[0][i],refFront[1][i]))
+        
+        if minX > refFront[0][i]:
+            minX = refFront[0][i]
+        if maxX < refFront[0][i]:
+            maxX = refFront[0][i]
+
+        if minY > refFront[1][i]:
+            minY = refFront[1][i]
+        if maxY < refFront[1][i]:
+            maxY = refFront[1][i]
+
+    #print("{0}/{1} {2}/{3}".format(minX,maxX,minY,maxY))
+
+    normApproxFrontX = []
+    normApproxFrontY = []
+
+    for i in range(len(approxFront[0])):
+        normApproxFrontX.append((approxFront[0][i] - minX) / (maxX - minX))
+        normApproxFrontY.append((approxFront[1][i] - minY) / (maxY - minY))
+
+        #print("{0} {1}".format(normApproxFrontX[i],normApproxFrontY[i]))
+
+    return (normApproxFrontX, normApproxFrontY)
+    
 def pareto_frontier(Xs, Ys, maxX = False, maxY = False):
     # Sort the list in either ascending or descending order of X
     myList = sorted([[Xs[i], Ys[i]] for i in range(len(Xs))], reverse=maxX)
@@ -73,8 +77,7 @@ def pareto_frontier(Xs, Ys, maxX = False, maxY = False):
             p_frontX.remove(a)
             p_frontY.remove(b)   
 
-    return p_frontX, p_frontY
-
+    return (p_frontX, p_frontY)
 
 def euclidean_distance(x1,y1,x2,y2):
     return (sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2)))
@@ -126,7 +129,6 @@ def spacing (X,Y):
     for d in list_of_distances:
         sum+=((d-average_distance)*(d-average_distance))
     return sqrt(sum/float(number_of_points))
-
 
 def spread(X,Y,PF):
     if (len(X)!=len(Y)):

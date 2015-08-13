@@ -44,7 +44,7 @@ class HyperVolume:
         """
 
         def weaklyDominates(point, other):
-            for i in xrange(len(point)):
+            for i in range(len(point)):
                 if point[i] > other[i]:
                     return False
             return True
@@ -60,8 +60,8 @@ class HyperVolume:
             # shift points so that referencePoint == [0, ..., 0]
             # this way the reference point doesn't have to be explicitly used
             # in the HV computation
-            for j in xrange(len(relevantPoints)):
-                relevantPoints[j] = [relevantPoints[j][i] - referencePoint[i] for i in xrange(dimensions)]
+            for j in range(len(relevantPoints)):
+                relevantPoints[j] = [relevantPoints[j][i] - referencePoint[i] for i in range(dimensions)]
         self.preProcess(relevantPoints)
         bounds = [-1.0e308] * dimensions
         hyperVolume = self.hvRecursive(dimensions - 1, len(relevantPoints), bounds)
@@ -152,7 +152,7 @@ class HyperVolume:
         dimensions = len(self.referencePoint)
         nodeList = MultiList(dimensions)
         nodes = [MultiList.Node(dimensions, point) for point in front]
-        for i in xrange(dimensions):
+        for i in range(dimensions):
             self.sortByDimension(nodes, i)
             nodeList.extend(nodes, i)
         self.list = nodeList
@@ -189,6 +189,9 @@ class MultiList:
     
         def __str__(self): 
             return str(self.cargo)
+
+        def __lt__(self, other):
+            return 0
         
         
     def __init__(self, numberLists):  
@@ -205,7 +208,7 @@ class MultiList:
         
     def __str__(self):
         strings = []
-        for i in xrange(self.numberLists):
+        for i in range(self.numberLists):
             currentList = []
             node = self.sentinel.next[i]
             while node != self.sentinel:
@@ -258,7 +261,7 @@ class MultiList:
         
     def remove(self, node, index, bounds): 
         """Removes and returns 'node' from all lists in [0, 'index'[."""
-        for i in xrange(index): 
+        for i in range(index): 
             predecessor = node.prev[i]
             successor = node.next[i]
             predecessor.next[i] = successor
@@ -275,7 +278,7 @@ class MultiList:
         nodes of the node that is reinserted are in the list.
 
         """
-        for i in xrange(index): 
+        for i in range(index): 
             node.prev[i].next[i] = node
             node.next[i].prev[i] = node
             if bounds[i] > node.cargo[i]:
