@@ -1,8 +1,8 @@
-##############################################################
-##############################################################
-INSTRUCTIONS
+############################################################################################################################
+PF_METRICS INSTRUCTIONS
 
-Script to plot the global Pareto front and calculate generational distance, spread, spacing and relative hypervolume based on the pareto fronts output from jMetal (http://jmetal.sourceforge.net/).
+Script to plot the global Pareto front and calculate generational distance, spread, spacing and relative hypervolume based
+on the pareto fronts output from jMetal (http://jmetal.sourceforge.net/).
 
 USAGE:
 python pf_metrics.py <path_to_results> <number_of_runs> <objective_1_name> <objective_2_name>
@@ -23,6 +23,5 @@ Hypervolumes are calculated using the code of Simon Wessing from TU Dortmund Uni
 
 Please feel free to contact me at: renzom@fing.edu.uy
 
-##############################################################
-##############################################################
+############################################################################################################################
 

@@ -21,14 +21,16 @@ import numpy as np
 from hv import HyperVolume
 
 def normalize_front(refFront, approxFront):
+    """
+    This function normalizes the approximated Pareto front (approxFront)
+    in the range [0,1] using the reference Pareto front (refFront).
+    """
     minX = refFront[0][0]
     maxX = refFront[0][0]
     minY = refFront[1][0]
     maxY = refFront[1][0]
     
     for i in range(len(refFront[0])):
-        #print("{0} {1}".format(refFront[0][i],refFront[1][i]))
-        
         if minX > refFront[0][i]:
             minX = refFront[0][i]
         if maxX < refFront[0][i]:
@@ -39,16 +41,12 @@ def normalize_front(refFront, approxFront):
         if maxY < refFront[1][i]:
             maxY = refFront[1][i]
 
-    #print("{0}/{1} {2}/{3}".format(minX,maxX,minY,maxY))
-
     normApproxFrontX = []
     normApproxFrontY = []
 
     for i in range(len(approxFront[0])):
         normApproxFrontX.append((approxFront[0][i] - minX) / (maxX - minX))
         normApproxFrontY.append((approxFront[1][i] - minY) / (maxY - minY))
-
-        #print("{0} {1}".format(normApproxFrontX[i],normApproxFrontY[i]))
 
     return (normApproxFrontX, normApproxFrontY)
     

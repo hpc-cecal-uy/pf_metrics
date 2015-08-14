@@ -2,8 +2,10 @@
 # -*- coding: utf-8 -*-
 #
 #  gnuplot.py
+#
+#  This script plots a reference Pareto fronts and a set of approximate Pareto fronts using gnuplot.
 #  
-#  Copyright 2015 Santiago Iturriaga - INCO <siturria@saxo.fing.edu.uy>
+#  Copyright 2015 Santiago Iturriaga
 #  
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -22,6 +24,7 @@
 #  
 #  
 
+from os import path
 import numpy as np
 from pylab import *
 
@@ -31,13 +34,15 @@ def plot_allruns(objectives, global_pf, results, path_to_results):
     colors = [cmap(p) for p in np.linspace(0, 1, len(results))]
 
     for run in range(len(results)):
-        scatter(results[run][objectives[0]],results[run][objectives[1]],label="Run #%d"%run, color=colors[run])
+        scatter(results[run][0], results[run][1], label="Run #%d"%run, color=colors[run])
     
-    plot(global_pf[0],global_pf[1],color="black", linestyle=":", label="Global PF")
+    plot(global_pf[0], global_pf[1], color="black", linestyle=":", label="Global PF")
     grid(True)
-    xlabel (objectives[0])
-    ylabel (objectives[1])
-    title ("Global PF")
+    xlabel(objectives[0])
+    ylabel(objectives[1])
+    title("Global PF")
     legend(loc=0,ncol=3 ,prop={'size':10},scatterpoints = 1)
-    savefig("%s/GlobalPF.png"%path_to_results)
 
+    plot_path = path.join(path_to_results, "GlobalPF.png")
+    savefig(plot_path)
+    return plot_path

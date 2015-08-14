@@ -25,8 +25,16 @@ import tabulatelib
 import gnuplot
 from hv import HyperVolume
 
-def gather_pf(results_paths):
-    global_pf = metricslib.pareto_frontier(results_paths[0],results_paths[1])
+def print_non_dominated(point_set):
+    """
+    Computes and prints the non-dominated set of points in points_set.
+    """
+
+    if len(point_set) != 2:
+        print("Error. Invalid number of objectives. Only 2 objectives are supported.")
+        exit(-1)
+    
+    global_pf = metricslib.pareto_frontier(point_set[0],point_set[1])
 
     for i in range(len(global_pf[0])):
         print("{0} {1}".format(global_pf[0][i],global_pf[1][i]))
@@ -40,6 +48,10 @@ def compute(ref_pf_file, path_to_results, number_of_runs, objectives, results, n
         print("Error. Invalid <normalize> value. It must be 0/flase/no or 1/true/yes.")
         exit(-1)
 
+    if len(objectives) != 2:
+        print("Error. Invalid number of objectives. Only 2 objectives are supported.")
+        exit(-1)
+
     raw_global_pf = None
     x=[]
     y=[]
@@ -47,9 +59,9 @@ def compute(ref_pf_file, path_to_results, number_of_runs, objectives, results, n
     if ref_pf_file == None:
         #Let's find the global pareto front combining all runs
         for run in range (0,number_of_runs):
-            for item in results[run][objectives[0]]:
+            for item in results[run][0]:
                 x.append(item)
-            for item in results[run][objectives[1]]:
+            for item in results[run][1]:
                 y.append(item)
     else:
         #Let's load the pareto front file
@@ -61,7 +73,7 @@ def compute(ref_pf_file, path_to_results, number_of_runs, objectives, results, n
 
     raw_global_pf = metricslib.pareto_frontier(x,y)
 
-    gnuplot.plot_allruns(objectives, raw_global_pf, results, path_to_results)
+    plot_path = gnuplot.plot_allruns(objectives, raw_global_pf, results, path_to_results)
 
     #Now let's calculate some metrics
     gd_list=[]
@@ -81,17 +93,14 @@ def compute(ref_pf_file, path_to_results, number_of_runs, objectives, results, n
 
     for run in range(0,number_of_runs):
         if normalize:
-            approx_pf = metricslib.normalize_front(raw_global_pf, (results[run][objectives[0]], results[run][objectives[1]]))
+            approx_pf = metricslib.normalize_front(raw_global_pf, (results[run][0],results[run][1]))
         else:
-            approx_pf = (results[run][objectives[0]], results[run][objectives[1]])
+            approx_pf = (results[run][0], results[run][1])
         
-        #gd_list.append(metricslib.generational_distance(results[run][objectives[0]],results[run][objectives[1]],global_pf))
         gd_list.append(metricslib.generational_distance(approx_pf[0],approx_pf[1],global_pf))
         
-        #spa_list.append(metricslib.spacing(results[run][objectives[0]],results[run][objectives[1]]))
         spa_list.append(metricslib.spacing(approx_pf[0],approx_pf[1]))
         
-        #spr_list.append(metricslib.spread(results[run][objectives[0]],results[run][objectives[1]], global_pf))
         spr_list.append(metricslib.spread(approx_pf[0],approx_pf[1],global_pf))
         
         hyperVolume = metricslib.HyperVolume(referencePoint)
@@ -149,7 +158,7 @@ def compute(ref_pf_file, path_to_results, number_of_runs, objectives, results, n
     (w,p_value) = stats.shapiro(hv_quotients_list)
     print("Shapiro-wilk test: p-value={0} w={1}".format(p_value,w))
     print("")
-    print("You can find the plot at: {0}{1}".format(path_to_results,"GlobalPF.png"))
+    print("You can find the plot at: {0}".format(plot_path))
 
 
 

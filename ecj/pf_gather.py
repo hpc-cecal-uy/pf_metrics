@@ -2,8 +2,11 @@
 # -*- coding: utf-8 -*-
 #
 #  pf_gather.py
-#  
-#  Copyright 2015 Santiago Iturriaga - INCO <siturria@saxo.fing.edu.uy>
+#
+#  This script loads a set of jMetal solutions from different
+#  experiments and computes the aggregated Pareto front.
+#
+#  Copyright 2015 Santiago Iturriaga
 #  
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -23,39 +26,51 @@
 #  
 
 import sys
+from os import path
+
 sys.path.append('../libs')
 import generic_pf_metrics
 
-def load_ecj_results(path_to_results, number_of_runs):
-    results = [[],[]]
+def load_ecj_results(path_to_results, num_objectives, num_runs):
+    results = []
     
-    for run in range(number_of_runs):
-        path_to_file = "{0}job.{1}.front.stat".format(path_to_results,run)
-        f = open (path_to_file)
-        lines = f.readlines()
-        
-        for line in lines:
-            tokens = line.split()
-            results[0].append(float(tokens[0]))
-            results[1].append(float(tokens[1]))
-        f.close()
+    for no in range(num_objectives):
+        results.append([])
+    
+    for run in range(num_runs):
+        path_to_file = path.join(path_to_results, "job.{0}.front.stat".format(run))
+
+        with open(path_to_file) as f:
+            lines = f.readlines()
+            
+            for line in lines:
+                tokens = line.split()
+
+                for no in range(num_objectives):
+                    results[no].append(float(tokens[no]))
 
     return results
 
 def main():
-    if len(sys.argv) < 3:
-        print("Not enough arguments. Usage: {0} <num runs> <result path 1> <result path 2> <result path 3> ...".format(sys.argv[0]))
+    if len(sys.argv) < 4:
+        print("This script loads a set of ECJ solutions from different experiments and computes the aggregated Pareto front.")
+        print("Not enough arguments. Usage: {0} <num runs> <num obj> <result path 1> <result path 2> <result path 3> ...".format(sys.argv[0]))
         exit(-1)   
 
     num_runs = int(sys.argv[1])
-    results_paths = [[],[]]
+    num_objectives = int(sys.argv[2])
+    
+    points = []
+    for no in range(num_objectives):
+        points.append([])
 
-    for p in range(2, len(sys.argv)):
-        aux_results = load_ecj_results(sys.argv[p], num_runs)
-        results_paths[0] = results_paths[0] + aux_results[0]
-        results_paths[1] = results_paths[1] + aux_results[1]
+    for p in range(3, len(sys.argv)):
+        aux_points = load_ecj_results(sys.argv[p], num_objectives, num_runs)
 
-    generic_pf_metrics.gather_pf(results_paths)
+        for no in range(num_objectives):
+            points[no] = points[no] + aux_points[no]
+
+    generic_pf_metrics.print_non_dominated(points)
         
     return 0
 
